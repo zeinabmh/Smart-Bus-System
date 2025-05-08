@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #5398A9;
+        }
+        .container {
+            position: relative;
+            display: flex;
+            flex-direction: row;
+            width: 90%;
+            max-width: 2500px;
+            height: 80%;
+            background-color: #fffefe;
+            filter: blur(px);
+            border-radius: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            font-family: monospace;
+        }
+        h1{
+            font-family: DejaVu Sans Mono, monospace;
+            font-weight: bold;
+            color:#0a536c;
+        }
+        .image-container {
+            flex: 1;
+            background-image: url('/static/images/image.jpg'); /* Replace 'your_image.jpg' with the path to your image */
+            background-size: cover;
+            background-position: center;
+        }
+        .button-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: monospace;
+        }
+        .round-button {
+            background-color: #5398A9;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 20px 40px; /* Adjust the padding for larger buttons */
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 300px; /* Adjust button width as needed */
+            height: 60px; /* Adjust button height */
+        }
+        /* Styles for icon and reset password link */
+        .icon {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-image: url('/static/images/download.jpg'); /* Replace 'icon.jpg' with the path to your icon image */
+            background-size: cover;
+            cursor: pointer;
+        }
+        .reset-password-link {
+            position: absolute;
+            bottom: 20px;
+            right: 70px; /* Adjust the distance from the icon */
+            font-size: 14px;
+            color: #5398A9;
+            text-decoration: none;
+            cursor: pointer;
+            border-radius: 100%;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="image-container"></div>
+        <div class="button-container">
+            <h1>Driver Dashboard</h1>
+            <form id="incomesForm" action="/reservations" method="POST">
+                {% csrf_token %}
+                <button class="round-button">Check Reservations</button>
+            </form>
+            
+            <form id="incomesForm" action="/payments" method="POST">
+                {% csrf_token %}
+                <button class="round-button">Check  Payments</button>
+            </form>
+            
+            <form id="incomesForm" action="/sendnot" method="POST">
+                {% csrf_token %}
+                <button class="round-button">Send Notifications</button>
+            </form>
+        </div>
+        <!-- Icon and reset password link -->
+        <div class="icon"></div>
+        <a href="/resetpassword" class="reset-password-link">Reset Password</a>
+    </div>
+</body>
+</html>

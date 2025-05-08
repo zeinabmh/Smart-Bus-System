@@ -1,0 +1,379 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments</title>
+    <style>
+     
+        body {
+    font-family: Trebuchet MS , sans-serif;
+    display: flex;
+    flex-direction: column; /* Ensure vertical stacking */
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+    height: 100vh;
+    margin: 0;
+    background-image: url('/static/images/1.png');
+    background-size: cover; /* Ensure the image covers the entire background */
+    background-position: center; /* Center the background image */
+    background-repeat: no-repeat; /* Prevent the image from repeating */
+        }
+        #container {
+           
+            top: 20px;
+            left: 20px;
+            width: 1200px; /* Fixed size */
+            
+            background-color: rgba(211, 198, 198, 0.578); /* White but transparent background */
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px; /* Rounded borders */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for elegance */
+            height: 500px; /* Set a fixed height */
+            overflow-y: auto; /* Allow vertical scrolling */
+        }
+
+        #container h1 {
+            font-weight: 500; /* Medium weight for headers */
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        #container label,
+        #container select,
+        #container p {
+            display: block;
+            width: 100%; /* Make labels and selects full width */
+            margin-bottom: 10px;
+            font-size: 16px; /* Slightly larger font for readability */
+        }
+
+        #container select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px; /* Rounded borders for selects */
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            max-height: 200px; /* Max height for the table container */
+            overflow-y: auto; /* Enable vertical scrolling */
+            width: calc(100% - 20px); /* Make the table container full width with padding consideration */
+            margin: 10px auto; /* Center the table container and add margin */
+        }
+
+        #dataTable {
+    width: calc(100% - 42px); /* Adjust width to accommodate borders and padding */
+    border-collapse: collapse;
+    table-layout: fixed; /* Ensure all cells and headers are the same size */
+}
+
+#dataTable th,
+#dataTable td {
+    width: 550px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+        #dataTable thead {
+            background-color: #f9f9f9;
+        }
+
+        #dataTable th {
+            position: sticky;
+            top: 0; /* Sticky header */
+            background-color: #fff; /* Ensure the sticky header has a background */
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Check Daily Payments</h1>
+        <p id="adminTotalIncome"></p>
+        <p id="totalIncome"></p>
+
+        <label for="yearSelect">Select Year:</label>
+        <select id="yearSelect"></select>
+
+        <label for="monthSelect">Select Month:</label>
+        <select id="monthSelect"></select>
+
+        <label for="daySelect">Select Day:</label>
+        <select id="daySelect"></select>
+
+        <table id="dataTable" style="display: none;">
+            <thead>
+                <tr>
+                   
+                    <th>Total Income</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table body will be populated dynamically using JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <div id="content-container">
+        <!-- Your content -->
+    </div>
+
+
+    <!-- Your Firebase JavaScript imports -->
+    
+    <script type="module">
+          import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+            import { getFirestore, collection, query, where, getDocs, getDoc,addDoc, doc, updateDoc  } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js"; 
+            import { GeoPoint } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+    
+            const firebaseConfig = {
+      apiKey: "AIzaSyDs2UfPtlrQtpMSHtxFCn2lhC6LngaiAu0",
+      authDomain: "busfirebase-9af15.firebaseapp.com",
+      databaseURL: "https://busfirebase-9af15-default-rtdb.firebaseio.com",
+      projectId: "busfirebase-9af15",
+      storageBucket: "busfirebase-9af15.appspot.com",
+      messagingSenderId: "538370290545",
+      appId: "1:538370290545:web:744e736b330e85944afcd0",
+      measurementId: "G-7777EW41GP"
+    };
+    
+            const app = initializeApp(firebaseConfig);
+           
+       
+           const db = getFirestore(app);
+           
+           var busName = "{{ document_id }}";
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Function to populate days based on the selected year and month
+            function populateDays(year, month) {
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const daySelect = document.getElementById('daySelect');
+                daySelect.innerHTML = '<option value="">Select Day</option>';
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const option = document.createElement('option');
+                    option.value = day;
+                    option.textContent = day;
+                    daySelect.appendChild(option);
+                }
+            }
+
+            // Function to populate years from 2021 to 2026
+            function populateYears() {
+                for (let year = 2021; year <= 2026; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    document.getElementById('yearSelect').appendChild(option);
+                }
+            }
+
+            // Populate years when the page is loaded
+            populateYears();
+            displayAdminTotalIncome();
+
+            
+            // Populate months from 1 to 12
+            for (let month = 1; month <= 12; month++) {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                document.getElementById('monthSelect').appendChild(option);
+            }
+
+            // Event listener for year select
+            document.getElementById('yearSelect').addEventListener('change', function() {
+                const year = parseInt(this.value);
+                const month = parseInt(document.getElementById('monthSelect').value);
+                populateDays(year, month);
+            });
+
+            // Event listener for month select
+            document.getElementById('monthSelect').addEventListener('change', function() {
+                const year = parseInt(document.getElementById('yearSelect').value);
+                const month = parseInt(this.value);
+                populateDays(year, month);
+            });
+
+            // Event listener for day select
+            document.getElementById('daySelect').addEventListener('change', async function() {
+                const year = parseInt(document.getElementById('yearSelect').value);
+                const month = parseInt(document.getElementById('monthSelect').value);
+                const day = parseInt(this.value);
+                const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+                try {
+                    const trips = await getTripsForDay(date);
+                    if (trips.length > 0) {
+                        const tripDetails = await getTripDetails(trips);
+                        populateTable(tripDetails);
+                        document.getElementById('dataTable').style.display = 'block';
+                        
+                    } else {
+                        console.log('No trips found for the specified day.');
+                        populateTable([]);
+                        document.getElementById('dataTable').style.display = 'none';
+                        displayTotalIncomes([]);
+                    }
+                } catch (error) {
+                    console.error('Error fetching trips:', error);
+                }
+            });
+
+    
+
+            async function getTripsForDay(date) {
+                var busname = "{{ busname }}";
+    const tripsRef = collection(db, 'Trips');
+    const q = query(tripsRef, where('date', '==', date), where('busName', '==', busname));
+
+
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+        // Create a pop-up window
+        const modal = document.createElement('div');
+        modal.style.backgroundColor = 'white';
+        modal.style.border = '1px solid #ccc';
+        modal.style.width = '300px';
+        modal.style.padding = '20px';
+        modal.style.position = 'fixed';
+        modal.style.top = '50%';
+        modal.style.left = '50%';
+        modal.style.transform = 'translate(-50%, -50%)';
+        modal.innerHTML = `
+            <p>No trips found for the selected date.</p>
+            <button id="okButton">OK</button>
+        `;
+        document.body.appendChild(modal);
+        
+        // Attach event listener to the button
+        const okButton = document.getElementById('okButton');
+        okButton.addEventListener('click', function() {
+            window.location.reload(); // Refresh the page
+        });
+
+        return []; // Returning an empty array since no trips were found
+    }
+    return querySnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+}
+
+async function getTripDetails(trips) {
+    const tripDetails = [];
+    for (const trip of trips) {
+        const busName = trip.data.busName;
+        const totalIncome = await getTotalIncome(trip.id);
+        tripDetails.push({ busName, tripID: trip.id, totalIncome });
+    }
+    return tripDetails;
+}
+
+async function getTotalIncome(tripID) {
+    const bookingsRef = collection(db, 'Books');
+    const q = query(bookingsRef, where('tripId', '==', tripID), where('payed', '==', true));
+    const querySnapshot = await getDocs(q);
+    let totalIncome = 0;
+    querySnapshot.forEach(doc => {
+        totalIncome += parseInt(doc.data().fare)*0.9; // Assuming 'fare' is the field containing the fare amount
+    });
+    return totalIncome;
+}
+
+function populateTable(tripDetails) {
+    const tbody = document.querySelector('#dataTable tbody');
+    tbody.innerHTML = '';
+
+    tripDetails.forEach(trip => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+        <td>${trip.totalIncome}</td>
+          
+           
+        `;
+        tbody.appendChild(tr);
+    });
+    displayTotalIncomes();
+   
+    
+   
+}
+
+async function displayTotalIncomes() {
+    const totalIncomeElement = document.getElementById('totalIncome');
+    let totalIncomeSum = 0;
+
+    const tableRows = document.querySelectorAll('#dataTable tbody tr');
+    tableRows.forEach(row => {
+        const incomeCell = row.querySelector('td:nth-child(1)'); // Assuming the income is in the second column
+        if (incomeCell) {
+            const income = parseFloat(incomeCell.textContent);
+            if (!isNaN(income)) {
+                totalIncomeSum += income;
+            }
+        }
+    });
+
+    totalIncomeElement.textContent = `Total Incomes for this day: ${totalIncomeSum}`;
+    
+}
+
+
+async function getDriverID(busname) {
+            try {
+                const driversRef = collection(db, 'Drivers');
+                const q = query(driversRef, where('busname', '==', busname));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    console.log('No driver found for the specified bus name.');
+                    return null;
+                } else {
+                    const driverDoc = querySnapshot.docs[0];
+                    const driverID = driverDoc.id; // Get the document ID which is the driver ID
+                    console.log('Driver ID:', driverID);
+                    return driverID;
+                }
+            } catch (error) {
+                console.error('Error finding driver ID:', error);
+                return null;
+            }
+        }
+
+        async function getAdminTotalIncome(driverID) {
+            try {
+                const adminDocRef = doc(db, 'Drivers', driverID);
+                const adminDocSnap = await getDoc(adminDocRef);
+                return adminDocSnap;
+            } catch (error) {
+                console.error('Error fetching admin total income:', error);
+                return null;
+            }
+        }
+
+        async function displayAdminTotalIncome() {
+            const busname = "{{ busname }}";
+            console.log(busname)
+            try {
+                const driverID = await getDriverID(busname);
+                if (!driverID) return;
+
+                const adminDoc = await getAdminTotalIncome(driverID);
+                if (adminDoc.exists() && adminDoc.data().Incomes !== undefined) {
+                    const adminTotalIncomeElement = document.getElementById('adminTotalIncome');
+                    adminTotalIncomeElement.textContent = `Driver Total Income: ${adminDoc.data().Incomes}`;
+                } else {
+                    console.log('Driver total income document does not exist or totalIncomes field is undefined.');
+                }
+            } catch (error) {
+                console.error('Error displaying admin total income:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            displayAdminTotalIncome();
+        });
+    });
+    </script>
+</body>
+</html>

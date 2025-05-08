@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservations</title>
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column; /* Ensure vertical stacking */
+            align-items: center; /* Center horizontally */
+            justify-content: center; /* Center vertically */
+            height: 100vh;
+            margin: 0;
+            background-image: url('/static/images/image.jpg');
+
+    
+
+            
+        }
+        #content-container {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        #container {
+            width: 80%;
+            max-width: 1000px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: rgba(255, 255, 255, 0.5); 
+            padding: 2cm;
+            height: 300px; /* Set a fixed height */
+            overflow-y: auto; /* Allow vertical scrolling */
+            font-family: monospace;
+            font-size: large;
+            
+        }
+        h1 {
+            font-family: DejaVu Sans Mono, monospace;
+            font-weight: bold;
+            color:#333;
+            margin: 0;
+        }
+        p {
+            color: #333;
+            tab-size: 5px;
+           font-family: monospace;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 0 auto 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            /* Add padding to the left side */
+            padding-left: 40px;
+            padding-right: 20px;
+            padding-bottom: 10px;
+
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tbody tr:nth-child(odd) {
+            background-color: #fff;
+        }
+        .contact-button {
+            padding: 10px 20px;
+            background-color: #476b92;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+        }
+        .contact-button:hover {
+            background-color: #2a5079;
+        }
+    </style>
+</head>
+<body>
+    <div id="content-container">
+        <h1>Welcome to the Reservation Checker</h1>
+        <p>To get started, please select a date and time for the trip you're interested in.
+            Once you've made your selections, you'll see a list of passengers who have booked this trip along with their information.
+            If you need to get in touch with any passenger due to a problem or inquiry, you can easily do so by clicking on the "Contact" button next to their details.
+        </p>
+    </div>
+    
+    <div id="container">
+           
+        <label for="yearSelect">Select Year:</label>
+        <select id="yearSelect"></select>
+
+        <label for="monthSelect">Select Month:</label>
+        <select id="monthSelect"></select>
+
+        <label for="daySelect">Select Day:</label>
+        <select id="daySelect"></select>
+
+        <label for="timeSelect">Select Time:</label>
+        <select id="timeSelect" name="time">
+            <option value="">Select Time</option>
+        </select>
+        <table id="dataTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>email</th>
+                    <th>phone</th>
+                    <th>startPoint</th>
+                    <th>endPoint</th>
+                    <th>fare</th>
+                    <th>Payment Status</th> 
+                    <th>Contact User</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table body will be populated dynamically using JavaScript -->
+            </tbody>
+        </table>
+    </div>
+    <script type="module">
+        // Define a JavaScript variable 'busname' and assign it the value passed from the view
+        var busName = "{{ busname }}";
+    
+        // Example JavaScript code using the 'busname' variable
+        console.log("Busname:", busName);
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+            import { getFirestore, collection, query, where, getDocs, addDoc , getDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js"; 
+            
+    
+            const firebaseConfig = {
+      apiKey: "AIzaSyDs2UfPtlrQtpMSHtxFCn2lhC6LngaiAu0",
+      authDomain: "busfirebase-9af15.firebaseapp.com",
+      databaseURL: "https://busfirebase-9af15-default-rtdb.firebaseio.com",
+      projectId: "busfirebase-9af15",
+      storageBucket: "busfirebase-9af15.appspot.com",
+      messagingSenderId: "538370290545",
+      appId: "1:538370290545:web:744e736b330e85944afcd0",
+      measurementId: "G-7777EW41GP"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        function populateDays(year, month) {
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const daySelect = document.getElementById('daySelect');
+                daySelect.innerHTML = '<option value="">Select Day</option>';
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const option = document.createElement('option');
+                    option.value = day;
+                    option.textContent = day;
+                    daySelect.appendChild(option);
+                }
+            }
+
+            // Function to populate years from 2021 to 2026
+            function populateYears() {
+                for (let year = 2021; year <= 2026; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    document.getElementById('yearSelect').appendChild(option);
+                }
+            }
+
+            // Populate years when the page is loaded
+            populateYears();
+            
+
+            
+            // Populate months from 1 to 12
+            for (let month = 1; month <= 12; month++) {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                document.getElementById('monthSelect').appendChild(option);
+            }
+
+            // Event listener for year select
+            document.getElementById('yearSelect').addEventListener('change', function() {
+                const year = parseInt(this.value);
+                const month = parseInt(document.getElementById('monthSelect').value);
+                populateDays(year, month);
+            });
+
+            // Event listener for month select
+            document.getElementById('monthSelect').addEventListener('change', function() {
+                const year = parseInt(document.getElementById('yearSelect').value);
+                const month = parseInt(this.value);
+                populateDays(year, month);
+            });
+
+        async function fetchTripTimes() {
+            const year = parseInt(document.getElementById('yearSelect').value);
+            const month = parseInt(document.getElementById('monthSelect').value);
+            const day = parseInt(document.getElementById('daySelect').value);
+            const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+            if (!day) {
+                console.error("Selected date is missing.");
+                return;
+            }
+
+            try {
+                const q = query(collection(db, 'Trips'), where('date', '==', date));
+                const tripsSnapshot = await getDocs(q);
+                const tripTimes = [];
+
+                tripsSnapshot.forEach((doc) => {
+                    const tripData = doc.data();
+                    tripTimes.push(tripData.estTime[0]); // Assuming 'estTime' is an array
+                });
+
+                const timeSelect = document.getElementById('timeSelect');
+                timeSelect.innerHTML = '';
+                
+                const defaultOption = document.createElement('option');
+                defaultOption.text = 'Select Time';
+                defaultOption.value = '';
+                timeSelect.add(defaultOption);
+
+                tripTimes.forEach(time => {
+                    const option = document.createElement('option');
+                    option.text = time;
+                    option.value = time;
+                    timeSelect.add(option);
+                });
+            } catch (error) {
+                console.error("Error fetching trip times:", error);
+            }
+        }
+
+        document.getElementById('daySelect').addEventListener('change', fetchTripTimes);
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const dataTable = document.getElementById('dataTable');
+            dataTable.style.display = 'none';
+
+            async function getTripID(busname, date, time) {
+                const tripsRef = collection(db, 'Trips');
+                const q = query(tripsRef, where('busName', '==', busname), where('date', '==', date), where('estTime', 'array-contains', time));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    alert('No trip found for the specified criteria.');
+                    return null;
+                } else {
+                    return querySnapshot.docs[0].id;
+                }
+            }
+
+            
+            async function getBookings(tripID) {
+    const bookingsRef = collection(db, 'Books');
+    const q = query(bookingsRef, where('tripId', '==', tripID));
+    console.log(tripID);
+    const querySnapshot = await getDocs(q);
+
+    const bookings = [];
+    // Iterate through the documents in the Books collection
+    for (const doc of querySnapshot.docs) {
+        const bookingData = doc.data();
+        // Get passenger ID from the booking data
+        const passengerID = bookingData.PassengerId;
+        console.log(passengerID);
+        // Fetch passenger details from the Passengers collection based on the passenger ID
+        const passengerSnapshot = await getDocs(collection(db, 'Passengers'));
+        passengerSnapshot.forEach(passengerDoc => {
+            if (passengerDoc.id === passengerID) {
+                console.log("yes");
+                // Combine booking data with passenger details
+                const booking = {
+                    email: passengerDoc.data().Email,
+                    phone: passengerDoc.data().phone,
+                    startPoint: bookingData.startPoint,
+                    endPoint: bookingData.endPoint,
+                    payed: bookingData.payed,
+                    fare: bookingData.fare
+                };
+                bookings.push(booking);
+            }
+        });
+    }
+    console.log(bookings);
+    return bookings;
+}
+
+   
+
+
+
+
+
+
+function populateTable(bookings) {
+    const tbody = document.querySelector('#dataTable tbody');
+    tbody.innerHTML = ''; // Clear existing table rows
+    
+    bookings.forEach(booking => {
+        const tr = document.createElement('tr');
+        const isChecked = booking.payed ? 'checked' : '';
+        // Add the checkbox-checked class if the checkbox is checked
+        const checkboxClass = booking.payed ? 'checkbox-checked' : ''
+        tr.innerHTML = `
+            <td>${booking.email}</td>
+            <td>${booking.phone}</td>
+            <td>${booking.startPoint}</td>
+            <td>${booking.endPoint}</td>
+            <td>${booking.fare}</td>
+            <td class="${checkboxClass}"><input type="checkbox" disabled ${isChecked}></td> <!-- Checkbox column -->
+            <td><button class="contact-button" data-email="${booking.phone}">Contact</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Add event listeners to contact buttons after populating the table
+    addContactButtonListeners();
+}
+
+function addContactButtonListeners() {
+    const contactButtons = document.querySelectorAll('.contact-button');
+    contactButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const email = button.getAttribute('data-email');
+            contactUser(email);
+        });
+    });
+}
+
+function contactUser(email) {
+    // Implement your logic to contact the user using the provided email
+    console.log("Contacting user with email:", email);
+    // Example: You can open a mail client with the email pre-filled
+    window.location.href = "tel:" + email;
+}
+
+document.getElementById('timeSelect').addEventListener('change', async function() {
+                const selectedTime = this.value;
+                const busname = "{{ busname }}"; // Replace with your actual busname
+                const year = parseInt(document.getElementById('yearSelect').value);
+                const month = parseInt(document.getElementById('monthSelect').value);
+                const day = parseInt(document.getElementById('daySelect').value);
+                const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                const tripID = await getTripID(busname, date, selectedTime);
+
+                if (tripID) {
+                    const bookings = await getBookings(tripID);
+                    populateTable(bookings);
+                    document.getElementById('dataTable').style.display = 'block';
+                } else {
+                    alert('No trip found for the specified criteria.');
+                    populateTable([]);
+                    document.getElementById('dataTable').style.display = 'none';
+                }
+            });
+
+        });
+ 
+
+    </script>
+   
+</body>
+</html>
+

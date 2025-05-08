@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notify Users</title>
+    
+    <style>
+        /* Add your CSS styles here */
+        body {
+    font-family: Trebuchet MS , sans-serif;
+    display: flex;
+    flex-direction: column; /* Ensure vertical stacking */
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+    height: 100vh;
+    margin: 20px;
+    background-image: url('/static/images/notii.png');
+    background-size: cover; /* Ensure the image covers the entire background */
+    background-position: center; /* Center the background image */
+    background-repeat: no-repeat; /* Prevent the image from repeating */
+}
+
+#top-right-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+           max-width: 500px;
+            padding: 20px;
+            
+            border-radius: 10px; /* Rounded borders */
+           
+        }
+
+        #top-right-container h1 {
+            font-weight: 500; /* Medium weight for headers */
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        #top-right-container label,
+        #top-right-container select,
+        #top-right-container input {
+
+            display: block;
+            width: 100%; /* Make inputs and selects full width */
+            margin-bottom: 10px;
+            font-size: 28px; /* Slightly larger font for readability */
+        }
+
+        #top-right-container select,
+        #top-right-container input[type="text"],
+        #top-right-container input[type="submit"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px; /* Rounded borders for inputs */
+            box-sizing: border-box;
+        }
+
+        #top-right-container input[type="submit"] {
+            background-color: #4094b7; /* Stylish green button */
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #top-right-container input[type="submit"]:hover {
+            background-color: #3b819f; /* Darker green on hover */
+        }
+
+    </style>
+</head>
+<body>
+    <div id="top-right-container">
+        
+        <form action="{% url 'send_not' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="busname" value="{{ busname }}">
+            <input type="hidden" name="passengerIds" id="passengerIds" value="">
+
+            
+            <label for="yearSelect">Select Year:</label>
+            <select id="yearSelect"></select>
+
+            <label for="monthSelect">Select Month:</label>
+            <select id="monthSelect"></select>
+
+            <label for="daySelect">Select Day:</label>
+            <select id="daySelect"></select>
+
+            <label for="timeSelect">Select Time:</label>
+            <select id="timeSelect" name="time">
+                <option value="">Select Time</option>
+                <!-- Options will be populated dynamically using JavaScript -->
+            </select>
+
+            <label for="notificationMessage">Enter Message:</label>
+            <input type="text" id="notificationMessage" name="notificationMessage">
+
+            <input type="submit" name="submit" id="submit">
+        </form>
+    </div>
+    <script type="module">
+        // Define a JavaScript variable 'busname' and assign it the value passed from the view
+        var busName = "{{ busname }}";
+    
+        // Example JavaScript code using the 'busname' variable
+        console.log("Busname:", busName);
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+            import { getFirestore, collection, query, where, getDocs, addDoc , getDoc, doc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js"; 
+            import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-messaging.js";
+
+    
+            const firebaseConfig = {
+      apiKey: "AIzaSyDs2UfPtlrQtpMSHtxFCn2lhC6LngaiAu0",
+      authDomain: "busfirebase-9af15.firebaseapp.com",
+      databaseURL: "https://busfirebase-9af15-default-rtdb.firebaseio.com",
+      projectId: "busfirebase-9af15",
+      storageBucket: "busfirebase-9af15.appspot.com",
+      messagingSenderId: "538370290545",
+      appId: "1:538370290545:web:744e736b330e85944afcd0",
+      measurementId: "G-7777EW41GP"
+    };
+    
+    const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const messaging = getMessaging();
+              // Function to populate days based on the selected year and month
+              function populateDays(year, month) {
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const daySelect = document.getElementById('daySelect');
+                daySelect.innerHTML = '<option value="">Select Day</option>';
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const option = document.createElement('option');
+                    option.value = day;
+                    option.textContent = day;
+                    daySelect.appendChild(option);
+                }
+            }
+
+            // Function to populate years from 2021 to 2026
+            function populateYears() {
+                for (let year = 2021; year <= 2026; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    document.getElementById('yearSelect').appendChild(option);
+                }
+            }
+
+            // Populate years when the page is loaded
+            populateYears();
+            
+
+            
+            // Populate months from 1 to 12
+            for (let month = 1; month <= 12; month++) {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month;
+                document.getElementById('monthSelect').appendChild(option);
+            }
+
+            // Event listener for year select
+            document.getElementById('yearSelect').addEventListener('change', function() {
+                const year = parseInt(this.value);
+                const month = parseInt(document.getElementById('monthSelect').value);
+                populateDays(year, month);
+            });
+
+            // Event listener for month select
+            document.getElementById('monthSelect').addEventListener('change', function() {
+                const year = parseInt(document.getElementById('yearSelect').value);
+                const month = parseInt(this.value);
+                populateDays(year, month);
+            });
+
+        async function fetchTripTimes() {
+            const year = parseInt(document.getElementById('yearSelect').value);
+            const month = parseInt(document.getElementById('monthSelect').value);
+            const day = parseInt(document.getElementById('daySelect').value);
+            const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+            
+
+            try {
+                const q = query(collection(db, 'Trips'), where('date', '==', date));
+                const tripsSnapshot = await getDocs(q);
+                const tripTimes = [];
+
+                tripsSnapshot.forEach((doc) => {
+                    const tripData = doc.data();
+                    tripTimes.push(tripData.estTime[0]); // Assuming 'estTime' is an array
+                });
+
+                const timeSelect = document.getElementById('timeSelect');
+                timeSelect.innerHTML = '';
+                
+                const defaultOption = document.createElement('option');
+                defaultOption.text = 'Select Time';
+                defaultOption.value = '';
+                timeSelect.add(defaultOption);
+
+                tripTimes.forEach(time => {
+                    const option = document.createElement('option');
+                    option.text = time;
+                    option.value = time;
+                    timeSelect.add(option);
+                });
+            } catch (error) {
+                console.error("Error fetching trip times:", error);
+            }
+        }
+
+        document.getElementById('daySelect').addEventListener('change', fetchTripTimes);
+
+
+        document.addEventListener('DOMContentLoaded', async function() {
+    async function getTripID(busname, date, time) {
+        const tripsRef = collection(db, 'Trips');
+        const q = query(tripsRef, where('busName', '==', busname), where('date', '==', date), where('estTime', 'array-contains', time));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            console.log('No trip found for the specified criteria.');
+            return null;
+        } else {
+            return querySnapshot.docs[0].id;
+        }
+    }
+
+    async function getPassengerIDs(tripID) {
+        const bookingsRef = collection(db, 'Books');
+        const q = query(bookingsRef, where('tripId', '==', tripID));
+        const querySnapshot = await getDocs(q);
+
+        const passengerIDs = [];
+        querySnapshot.forEach(doc => {
+            const bookingData = doc.data();
+            passengerIDs.push(bookingData.PassengerId);
+        });
+        console.log(passengerIDs);
+        return passengerIDs;
+    }
+    async function getTokensForPassengerIDs(passengerIDs) {
+    const tokens = [];
+    for (const passengerID of passengerIDs) {
+        try {
+            const passengerDoc = await getDoc(doc(db, 'Passengers', passengerID));
+            if (passengerDoc.exists()) {
+                tokens.push(passengerDoc.data().Token); // Assuming the token field is named 'token'
+            } else {
+                console.error(`Token not found for passenger ID: ${passengerID}`);
+            }
+        } catch (error) {
+            console.error(`Error fetching token for passenger ID: ${passengerID}`, error);
+        }
+    }
+    console.log(tokens);
+    return tokens;
+}
+
+
+    document.getElementById('timeSelect').addEventListener('change', async function() {
+    const selectedTime = this.value;
+    const busname = "{{ busname }}"; // Replace with your actual busname
+
+    const year = parseInt(document.getElementById('yearSelect').value);
+            const month = parseInt(document.getElementById('monthSelect').value);
+            const day = parseInt(document.getElementById('daySelect').value);
+            const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    const tripID = await getTripID(busname, date, selectedTime);
+
+    if (tripID) {
+        const passengerIDs = await getPassengerIDs(tripID);
+        const tokens = await  getTokensForPassengerIDs(passengerIDs);
+        console.log(tokens);
+
+        
+        document.getElementById('passengerIds').value = JSON.stringify(tokens);
+    } else {
+        console.log('No trip found for the specified criteria.');
+    }
+});
+     });
+/*document.getElementById('sendNotification').addEventListener('click', async function() {
+    const token = document.getElementById('token').value; // Retrieve the token from the hidden input field
+    const message = document.getElementById('notificationMessage').value; // Retrieve the message from the input field
+
+    // Retrieve CSRF token from cookies
+    const csrftoken = getCookie('csrftoken');
+
+    try {
+        const response = await fetch('/send_not/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')  // Include CSRF token in the request headers
+            },
+            body: JSON.stringify({ token: token, message: message }), // Send token and message in the request body
+        });
+
+        const data = await response.json();
+        console.log(data); // Log the response from the backend
+    } catch (error) {
+        console.error('Error sending notification:', error);
+    }
+});
+
+// Function to retrieve CSRF token from cookies
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}*/
+
+
+
+   
+    </script>
+   
+</body>
+</html>
