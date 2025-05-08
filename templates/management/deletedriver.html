@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Driver</title>
+</head>
+<body>
+    <h1>Delete Driver</h1>
+   
+    <form action="/deletedriver" method="post">
+        {% csrf_token %}
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+        <button type="submit" name="action" value="delete">Delete</button>
+    </form>
+
+</body>
+</html>

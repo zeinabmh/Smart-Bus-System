@@ -1,0 +1,64 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #001a33; /* Background color */
+            color: white; /* Text color */
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .options-container {
+            width: 50%; /* Set width to 50% of the viewport */
+            text-align: center;
+        }
+        .options {
+            background-color: white; /* Background color for options container */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            display: inline-block;
+            width: 100%; /* Set width to 100% of parent container */
+            text-align: center;
+        }
+        .option-btn {
+            display: block;
+            width: 100%; /* Set buttons to fill the container width */
+            margin: 10px auto;
+            padding: 10px 20px;
+            background-color: #2d5986; /* Button background color */
+            color: white; /* Button text color */
+            text-align: center;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .option-btn:hover {
+            background-color: #004080; /* Darker shade of button background color on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="options-container">
+        <div class="options">
+            <button class="option-btn"><a href="/adddriver">Add Driver</a></button>
+            <button class="option-btn"><a href="/deletedriver">Delete Driver</a></button>
+            <button class="option-btn"><a href="/showdriver">Show Driver</a></button>
+            <button class="option-btn">Manage Trip</button>
+            <button class="option-btn">Incomes</button>
+        </div>
+    </div>
+
+   
+</body>
+</html>
