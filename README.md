@@ -4,6 +4,7 @@
 This project is a software system designed to solve bus transportation problems in rural areas of Lebanon. The Smart Bus System combines modern technology to improve public transportation efficiency and accessibility in underserved regions.
 
 The system features:
+
 -Real-time GPS tracking 🚏
 
 -Online reservation platform 📲
